@@ -3,6 +3,7 @@ package com.archyx.aureliumskills.source;
 import com.archyx.aureliumskills.AureliumSkills;
 import com.archyx.aureliumskills.skills.Skill;
 import com.archyx.aureliumskills.skills.Skills;
+import com.archyx.aureliumskills.source.custom.CustomSourceManager;
 import com.archyx.aureliumskills.util.item.ItemUtils;
 import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.Bukkit;
@@ -27,6 +28,7 @@ public class SourceManager {
     private final AureliumSkills plugin;
     private final Map<Source, Double> sources;
     private final Map<SourceTag, List<Source>> tags;
+    private final CustomSourceManager customSourceManager;
     private Map<Skill, Map<XMaterial, Double>> customBlocks;
     private Map<Skill, Map<String, Double>> customMobs;
     private Set<XMaterial> customBlockSet;
@@ -36,6 +38,7 @@ public class SourceManager {
         this.plugin = plugin;
         this.sources = new HashMap<>();
         this.tags = new HashMap<>();
+        this.customSourceManager = new CustomSourceManager(plugin);
     }
 
     public void loadSources() {
@@ -190,6 +193,10 @@ public class SourceManager {
 
     public Set<String> getCustomMobSet() {
         return customMobSet;
+    }
+
+    public CustomSourceManager getCustomSourceManager() {
+        return customSourceManager;
     }
 
     public static ItemStack getMenuItem(Source source) {

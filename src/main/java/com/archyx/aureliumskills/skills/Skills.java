@@ -78,6 +78,8 @@ public enum Skills implements Skill {
 	public Ability getXpMultiplierAbility() {
 		if (abilities.size() == 5) {
 			return abilities.get(1).get();
+		} else if (this.name().equals("SORCERY")) { // Disable sorcery ability
+			return null;
 		} else {
 			return abilities.get(0).get();
 		}

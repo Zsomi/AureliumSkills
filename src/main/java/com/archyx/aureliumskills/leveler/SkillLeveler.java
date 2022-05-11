@@ -10,7 +10,6 @@ import com.archyx.aureliumskills.source.Source;
 import com.archyx.aureliumskills.source.SourceManager;
 import com.archyx.aureliumskills.source.SourceTag;
 import com.archyx.aureliumskills.support.WorldGuardFlags;
-import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -18,26 +17,28 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 
 import java.util.Locale;
-import java.util.Map;
 
 public abstract class SkillLeveler {
 
     public final AureliumSkills plugin;
     private final SourceManager sourceManager;
     private Ability ability;
-    private final String skillName;
+    private String skillName;
 
-    public SkillLeveler(AureliumSkills plugin, Skill skill) {
+    public SkillLeveler(AureliumSkills plugin) {
         this.plugin = plugin;
-        this.skillName = skill.toString().toLowerCase(Locale.ENGLISH);
         this.sourceManager = plugin.getSourceManager();
     }
 
+    public SkillLeveler(AureliumSkills plugin, Skill skill) {
+        this(plugin);
+        this.skillName = skill.toString().toLowerCase(Locale.ENGLISH);
+    }
+
     public SkillLeveler(AureliumSkills plugin, Ability ability) {
-        this.plugin = plugin;
+        this(plugin);
         this.ability = ability;
         this.skillName = ability.getSkill().toString().toLowerCase(Locale.ENGLISH);
-        this.sourceManager = plugin.getSourceManager();
     }
 
     public double getXp(Source source) {
@@ -101,35 +102,15 @@ public abstract class SkillLeveler {
         return false;
     }
 
-    @SuppressWarnings("deprecation")
     public void checkCustomBlocks(Player player, Block block, Skill skill) {
-        // Check custom blocks
-        Map<XMaterial, Double> customBlocks = sourceManager.getCustomBlocks(skill);
-        if (customBlocks != null) {
-            for (Map.Entry<XMaterial, Double> entry : customBlocks.entrySet()) {
-                if (XMaterial.isNewVersion()) {
-                    if (entry.getKey().parseMaterial() == block.getType()) {
-                        if (OptionL.getBoolean(Option.CHECK_BLOCK_REPLACE) && plugin.getRegionManager().isPlacedBlock(block)) {
-                            return;
-                        }
-                        plugin.getLeveler().addXp(player, skill, getXp(player, entry.getValue()));
-                        break;
-                    }
-                }
-                else {
-                    if (entry.getKey().parseMaterial() == block.getType() && block.getData() == entry.getKey().getData()) {
-                        if (OptionL.getBoolean(Option.CHECK_BLOCK_REPLACE) && plugin.getRegionManager().isPlacedBlock(block)) {
-                            return;
-                        }
-                        plugin.getLeveler().addXp(player, skill, getXp(player, entry.getValue()));
-                        break;
-                    }
-                }
-            }
-        }
+        sourceManager.getCustomSourceManager().getLeveler().checkCustomBlocks(player, block, skill);
     }
 
     public boolean blockXpGain(Player player) {
+        return blockXpGain(player, this.skillName);
+    }
+
+    public boolean blockXpGain(Player player, String skillName) {
         //Checks if in blocked world
         Location location = player.getLocation();
         if (plugin.getWorldManager().isInBlockedWorld(location)) {
@@ -171,6 +152,10 @@ public abstract class SkillLeveler {
     }
 
     public boolean blockXpGainPlayer(Player player) {
+        return blockXpGainPlayer(player, this.skillName);
+    }
+
+    public boolean blockXpGainPlayer(Player player, String skillName) {
         //Check for permission
         if (!player.hasPermission("aureliumskills." + skillName)) {
             return true;
@@ -183,6 +168,10 @@ public abstract class SkillLeveler {
     }
 
     public boolean blockAbility(Player player) {
+        return blockAbility(player, this.skillName);
+    }
+
+    public boolean blockAbility(Player player, String skillName) {
         if (plugin.getWorldManager().isInDisabledWorld(player.getLocation())) {
             return true;
         }

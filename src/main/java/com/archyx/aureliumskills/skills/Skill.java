@@ -3,8 +3,8 @@ package com.archyx.aureliumskills.skills;
 import com.archyx.aureliumskills.ability.Ability;
 import com.archyx.aureliumskills.mana.MAbility;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Locale;
 import java.util.function.Supplier;
 
@@ -23,6 +23,7 @@ public interface Skill {
 
     String toString();
 
+    @Nullable
     Ability getXpMultiplierAbility();
 
 }
