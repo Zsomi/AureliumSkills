@@ -12,8 +12,6 @@ import com.archyx.aureliumskills.source.SourceTag;
 import com.archyx.aureliumskills.support.WorldGuardFlags;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 
@@ -101,10 +99,6 @@ public abstract class SkillLeveler {
             }
         }
         return false;
-    }
-
-    public void checkCustomBlocks(Player player, Block block, Skill skill) {
-        sourceManager.getCustomSourceManager().getLeveler().checkCustomBlocks(player, block, skill);
     }
 
     public boolean blockXpGain(Player player, Skill skill) {

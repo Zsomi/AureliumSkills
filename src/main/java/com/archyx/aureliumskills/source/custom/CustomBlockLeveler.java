@@ -24,7 +24,7 @@ public class CustomBlockLeveler extends SkillLeveler {
                 CustomBlockSource blockSource = (CustomBlockSource) source;
                 if (blockSource.isMatch(block)) { // Block matches custom source
                     double xp = entry.getValue();
-                    plugin.getLeveler().addXp(player, skill, getXp(player, xp, skill.getXpMultiplierAbility()));
+                    plugin.getLeveler().addXp(player, skill, getAbilityXp(player, xp, skill.getXpMultiplierAbility()));
                 }
             }
         }
