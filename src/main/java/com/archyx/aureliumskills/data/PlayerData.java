@@ -72,6 +72,23 @@ public class PlayerData {
         return skillLevels.getOrDefault(skill, 1);
     }
 
+    public Map<Skill, Integer> getSkillLevelMap() {
+        return skillLevels;
+    }
+
+    public double getSkillAverage() {
+        int sum = 0;
+        int numEnabled = 0;
+        // Only add enabled skills
+        for (Map.Entry<Skill, Integer> entry : skillLevels.entrySet()) {
+            if (OptionL.isEnabled(entry.getKey())) {
+                sum += entry.getValue();
+                numEnabled ++;
+            }
+        }
+        return sum / (double) numEnabled;
+    }
+
     public void setSkillLevel(Skill skill, int level) {
         skillLevels.put(skill, level);
     }
@@ -80,11 +97,17 @@ public class PlayerData {
         return skillXp.getOrDefault(skill, 0.0);
     }
 
+    public Map<Skill, Double> getSkillXpMap() {
+        return skillXp;
+    }
+
     public void setSkillXp(Skill skill, double xp) {
         skillXp.put(skill, xp);
     }
 
     public void addSkillXp(Skill skill, double amount) {
+        if (!OptionL.isEnabled(skill)) return; // Ignore disabled skills
+
         skillXp.merge(skill, amount, Double::sum);
     }
 
@@ -306,4 +329,53 @@ public class PlayerData {
     public void removeMultiplier(String name) {
         multipliers.remove(name);
     }
+
+    /**
+     * Checks if the profile has not had any changes since creation
+     * @return True if profile has not been modified, false if player has leveled profile
+     */
+    public boolean isBlankProfile() {
+        for (int level : skillLevels.values()) {
+            if (level > 1) {
+                return false;
+            }
+        }
+        for (double xp : skillXp.values()) {
+            if (xp > 0.0) {
+                return false;
+            }
+        }
+        for (double statLevel : statLevels.values()) {
+            if (statLevel > 0.0) {
+                return false;
+            }
+        }
+        if (statModifiers.size() > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public PlayerDataState getState() {
+        Map<Skill, Integer> copiedLevels = new HashMap<>(skillLevels);
+        Map<Skill, Double> copiedXp = new HashMap<>(skillXp);
+        Map<String, StatModifier> copiedStatModifiers = new HashMap<>(statModifiers);
+        return new PlayerDataState(player.getUniqueId(), copiedLevels, copiedXp, copiedStatModifiers, mana);
+    }
+
+    public void applyState(PlayerDataState state) {
+        this.skillLevels.clear();
+        this.skillLevels.putAll(state.getSkillLevels());
+
+        this.skillXp.clear();
+        this.skillXp.putAll(state.getSkillXp());
+
+        this.statModifiers.clear();
+        this.statModifiers.putAll(state.getStatModifiers());
+
+        this.mana = state.getMana();
+
+        plugin.getLeveler().updateStats(player);
+    }
+
 }

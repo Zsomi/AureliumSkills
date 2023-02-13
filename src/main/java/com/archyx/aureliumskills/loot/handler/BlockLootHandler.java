@@ -3,15 +3,18 @@ package com.archyx.aureliumskills.loot.handler;
 import com.archyx.aureliumskills.AureliumSkills;
 import com.archyx.aureliumskills.ability.Ability;
 import com.archyx.aureliumskills.api.event.LootDropCause;
+import com.archyx.aureliumskills.configuration.Option;
 import com.archyx.aureliumskills.configuration.OptionL;
 import com.archyx.aureliumskills.data.PlayerData;
-import com.archyx.aureliumskills.loot.Loot;
-import com.archyx.aureliumskills.loot.LootPool;
-import com.archyx.aureliumskills.loot.LootTable;
-import com.archyx.aureliumskills.loot.type.CommandLoot;
-import com.archyx.aureliumskills.loot.type.ItemLoot;
 import com.archyx.aureliumskills.skills.Skill;
 import com.archyx.aureliumskills.source.Source;
+import com.archyx.aureliumskills.support.WorldGuardFlags;
+import com.archyx.lootmanager.loot.Loot;
+import com.archyx.lootmanager.loot.LootPool;
+import com.archyx.lootmanager.loot.LootTable;
+import com.archyx.lootmanager.loot.type.CommandLoot;
+import com.archyx.lootmanager.loot.type.ItemLoot;
+import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -44,11 +47,28 @@ public abstract class BlockLootHandler extends LootHandler implements Listener {
         Block block = event.getBlock();
         if (getSource(block) == null) return;
 
+        // Check block replace
+        if (OptionL.getBoolean(Option.CHECK_BLOCK_REPLACE) && plugin.getRegionManager().isPlacedBlock(block)) {
+            return;
+        }
+
         Player player = event.getPlayer();
         if (blockAbility(player)) return;
 
         if (player.getGameMode() != GameMode.SURVIVAL) { // Only drop loot in survival mode
             return;
+        }
+
+        if (plugin.isWorldGuardEnabled()) {
+            if (plugin.getWorldGuardSupport().blockedByFlag(block.getLocation(), player, WorldGuardFlags.FlagKey.CUSTOM_LOOT)) {
+                return;
+            }
+        }
+
+        if (plugin.isSlimefunEnabled()) {
+            if (BlockStorage.hasBlockInfo(block.getLocation())) {
+                return;
+            }
         }
 
         PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);

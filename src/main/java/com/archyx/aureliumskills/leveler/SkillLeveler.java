@@ -12,6 +12,7 @@ import com.archyx.aureliumskills.source.SourceTag;
 import com.archyx.aureliumskills.support.WorldGuardFlags;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -41,14 +42,14 @@ public abstract class SkillLeveler {
         this.skillName = ability.getSkill().toString().toLowerCase(Locale.ENGLISH);
     }
 
-    public double getXp(Source source) {
+    public double getSourceXp(Source source) {
         return sourceManager.getXp(source);
     }
 
-    public double getXp(Player player, Source source) {
+    public double getAbilityXp(Player player, Source source) {
         PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);
         if (playerData != null) {
-            double output = getXp(source);
+            double output = getSourceXp(source);
             if (ability != null) {
                 if (plugin.getAbilityManager().isEnabled(ability)) {
                     double modifier = 1;
@@ -61,7 +62,7 @@ public abstract class SkillLeveler {
         return 0.0;
     }
 
-    public double getXp(Player player, double input) {
+    public double getAbilityXp(Player player, double input) {
         PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);
         if (playerData != null) {
             double output = input;
@@ -77,7 +78,7 @@ public abstract class SkillLeveler {
         return 0.0;
     }
 
-    public double getXp(Player player, double input, Ability ability) {
+    public double getAbilityXp(Player player, double input, Ability ability) {
         PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);
         if (playerData != null) {
             double output = input;
@@ -106,11 +107,7 @@ public abstract class SkillLeveler {
         sourceManager.getCustomSourceManager().getLeveler().checkCustomBlocks(player, block, skill);
     }
 
-    public boolean blockXpGain(Player player) {
-        return blockXpGain(player, this.skillName);
-    }
-
-    public boolean blockXpGain(Player player, String skillName) {
+    public boolean blockXpGain(Player player, Skill skill) {
         //Checks if in blocked world
         Location location = player.getLocation();
         if (plugin.getWorldManager().isInBlockedWorld(location)) {
@@ -130,12 +127,14 @@ public abstract class SkillLeveler {
                 return true;
             }
             // Check if blocked by flags
-            else return plugin.getWorldGuardSupport().blockedByFlag(location, player, WorldGuardFlags.FlagKey.XP_GAIN);
+            else if (plugin.getWorldGuardSupport().blockedByFlag(location, player, WorldGuardFlags.FlagKey.XP_GAIN)) {
+                return true;
+            } else return plugin.getWorldGuardSupport().blockedBySkillFlag(location, player, skill);
         }
         return false;
     }
 
-    public boolean blockXpGainLocation(Location location, Player player) {
+    public boolean blockXpGainLocation(Location location, Player player, Skill skill) {
         //Checks if in blocked world
         if (plugin.getWorldManager().isInBlockedWorld(location)) {
             return true;
@@ -146,7 +145,9 @@ public abstract class SkillLeveler {
                 return true;
             }
             // Check if blocked by flags
-            else return plugin.getWorldGuardSupport().blockedByFlag(location, player, WorldGuardFlags.FlagKey.XP_GAIN);
+            else if (plugin.getWorldGuardSupport().blockedByFlag(location, player, WorldGuardFlags.FlagKey.XP_GAIN)) {
+                return true;
+            } else return plugin.getWorldGuardSupport().blockedBySkillFlag(location, player, skill);
         }
         return false;
     }

@@ -4,10 +4,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
 import com.archyx.aureliumskills.ability.AbilityManager;
 import com.archyx.aureliumskills.api.AureliumAPI;
-import com.archyx.aureliumskills.commands.ManaCommand;
-import com.archyx.aureliumskills.commands.SkillCommands;
-import com.archyx.aureliumskills.commands.SkillsCommand;
-import com.archyx.aureliumskills.commands.StatsCommand;
+import com.archyx.aureliumskills.commands.*;
 import com.archyx.aureliumskills.configuration.Option;
 import com.archyx.aureliumskills.configuration.OptionL;
 import com.archyx.aureliumskills.data.PlayerData;
@@ -61,9 +58,9 @@ import com.archyx.aureliumskills.skills.endurance.EnduranceLeveler;
 import com.archyx.aureliumskills.skills.excavation.ExcavationLeveler;
 import com.archyx.aureliumskills.skills.excavation.ExcavationLootHandler;
 import com.archyx.aureliumskills.skills.farming.FarmingAbilities;
+import com.archyx.aureliumskills.skills.farming.FarmingHarvestLeveler;
 import com.archyx.aureliumskills.skills.farming.FarmingInteractLeveler;
 import com.archyx.aureliumskills.skills.farming.FarmingLeveler;
-import com.archyx.aureliumskills.skills.farming.FarmingHarvestLeveler;
 import com.archyx.aureliumskills.skills.fighting.FightingAbilities;
 import com.archyx.aureliumskills.skills.fighting.FightingLeveler;
 import com.archyx.aureliumskills.skills.fishing.FishingAbilities;
@@ -117,6 +114,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class AureliumSkills extends JavaPlugin {
 
@@ -165,7 +163,9 @@ public class AureliumSkills extends JavaPlugin {
 	private ProtocolLibSupport protocolLibSupport;
 	private Slate slate;
 	private MenuFileManager menuFileManager;
+	private ForgingLeveler forgingLeveler;
 
+	@Override
 	public void onEnable() {
 		// Registries
 		statRegistry = new StatRegistry();
@@ -343,6 +343,7 @@ public class AureliumSkills extends JavaPlugin {
 		}
 	}
 	
+	@Override
 	public void onDisable() {
 		for (PlayerData playerData : playerManager.getPlayerDataMap().values()) {
 			storageProvider.save(playerData.getPlayer(), false);
@@ -461,6 +462,14 @@ public class AureliumSkills extends JavaPlugin {
 				throw new InvalidCommandArgument("Skill " + input + " not found!");
 			}
 		});
+		commandManager.getCommandContexts().registerContext(UUID.class, c -> {
+			String input = c.popFirstArg();
+			try {
+				return UUID.fromString(input);
+			} catch (IllegalArgumentException e) {
+				throw new InvalidCommandArgument(input + "is not a valid UUID!");
+			}
+		});
 		commandManager.getCommandCompletions().registerAsyncCompletion("skills", c -> {
 			List<String> values = new ArrayList<>();
 			for (Skill skill : skillRegistry.getSkills()) {
@@ -515,7 +524,15 @@ public class AureliumSkills extends JavaPlugin {
 			}
 			return typeNames;
 		});
-		commandManager.registerCommand(new SkillsCommand(this));
+		commandManager.getCommandReplacements().addReplacement("skills_alias", "skills|sk|skill");
+		commandManager.registerCommand(new SkillsRootCommand(this));
+		commandManager.registerCommand(new ArmorCommand(this));
+		commandManager.registerCommand(new BackupCommand(this));
+		commandManager.registerCommand(new ItemCommand(this));
+		commandManager.registerCommand(new ModifierCommand(this));
+		commandManager.registerCommand(new ProfileCommand(this));
+		commandManager.registerCommand(new SkillCommand(this));
+		commandManager.registerCommand(new XpCommand(this));
 		commandManager.registerCommand(new StatsCommand(this));
 		commandManager.registerCommand(new ManaCommand(this));
 		if (OptionL.getBoolean(Option.ENABLE_SKILL_COMMANDS)) {
@@ -563,8 +580,10 @@ public class AureliumSkills extends JavaPlugin {
 		pm.registerEvents(new AlchemyLeveler(this), this);
 		pm.registerEvents(new EnchantingLeveler(this), this);
 		sorceryLeveler = new SorceryLeveler(this);
+		pm.registerEvents(sorceryLeveler, this);
 		pm.registerEvents(new HealingLeveler(this), this);
-		pm.registerEvents(new ForgingLeveler(this), this);
+		forgingLeveler = new ForgingLeveler(this);
+		pm.registerEvents(forgingLeveler, this);
 		pm.registerEvents(new Luck(this), this);
 		pm.registerEvents(new Wisdom(this), this);
 		pm.registerEvents(new FarmingAbilities(this), this);
@@ -601,6 +620,7 @@ public class AureliumSkills extends JavaPlugin {
 		pm.registerEvents(new ExcavationLootHandler(this), this);
 		pm.registerEvents(new MiningLootHandler(this), this);
 		pm.registerEvents(new ForagingLootHandler(this), this);
+		pm.registerEvents(bossBar, this);
 	}
 
 	private boolean setupEconomy() {
@@ -846,4 +866,7 @@ public class AureliumSkills extends JavaPlugin {
 		return menuFileManager;
 	}
 
+	public ForgingLeveler getForgingLeveler() {
+		return forgingLeveler;
+	}
 }

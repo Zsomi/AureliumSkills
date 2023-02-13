@@ -8,6 +8,7 @@ import com.archyx.aureliumskills.skills.farming.FarmingSource;
 import com.archyx.aureliumskills.skills.foraging.ForagingSource;
 import com.archyx.aureliumskills.skills.mining.MiningSource;
 import com.archyx.aureliumskills.source.BlockSource;
+import com.archyx.aureliumskills.skills.sorcery.SorcerySource;
 import com.archyx.aureliumskills.source.SourceManager;
 import com.archyx.aureliumskills.source.custom.CustomSource;
 import com.archyx.aureliumskills.util.block.BlockFaceUtil;
@@ -44,8 +45,8 @@ public class RegionBlockListener implements Listener {
         SourceManager sourceManager = plugin.getSourceManager();
         customMaterials = new Material[sourceManager.getCustomBlockSet().size()];
         int pos = 0;
-        for (XMaterial material : sourceManager.getCustomBlockSet()) {
-            customMaterials[pos] = material.parseMaterial();
+        for (Material material : sourceManager.getCustomBlockSet()) {
+            customMaterials[pos] = material;
             pos++;
         }
     }
@@ -54,8 +55,8 @@ public class RegionBlockListener implements Listener {
         SourceManager sourceManager = plugin.getSourceManager();
         customMaterials = new Material[sourceManager.getCustomBlockSet().size()];
         int pos = 0;
-        for (XMaterial material : sourceManager.getCustomBlockSet()) {
-            customMaterials[pos] = material.parseMaterial();
+        for (Material material : sourceManager.getCustomBlockSet()) {
+            customMaterials[pos] = material;
             pos++;
         }
     }
@@ -82,8 +83,8 @@ public class RegionBlockListener implements Listener {
         if (foragingSource != null && foragingSource.isTrunk()) {
             return;
         }
-        // Add all foraging, mining, and excavation blocks
-        if (MiningSource.getSource(block) != null || ForagingSource.getSource(block) != null || ExcavationSource.getSource(block) != null) {
+        // Add all foraging, mining, excavation, and sorcery blocks
+        if (MiningSource.getSource(block) != null || ForagingSource.getSource(block) != null || ExcavationSource.getSource(block) != null || SorcerySource.getSource(block) != null) {
             regionManager.addPlacedBlock(block);
         }
         // Add farming source if has check block replace

@@ -7,6 +7,7 @@ import com.archyx.aureliumskills.configuration.OptionL;
 import com.archyx.aureliumskills.data.AbilityData;
 import com.archyx.aureliumskills.data.PlayerData;
 import com.archyx.aureliumskills.data.PlayerDataLoadEvent;
+import com.archyx.aureliumskills.data.PlayerDataState;
 import com.archyx.aureliumskills.lang.CommandMessage;
 import com.archyx.aureliumskills.lang.Lang;
 import com.archyx.aureliumskills.leaderboard.LeaderboardManager;
@@ -15,16 +16,17 @@ import com.archyx.aureliumskills.modifier.StatModifier;
 import com.archyx.aureliumskills.skills.Skill;
 import com.archyx.aureliumskills.skills.Skills;
 import com.archyx.aureliumskills.stats.Stat;
+import com.archyx.aureliumskills.util.math.NumberUtil;
 import com.archyx.aureliumskills.util.misc.KeyIntPair;
 import com.archyx.aureliumskills.util.text.TextUtil;
 import com.google.gson.*;
-import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.*;
@@ -149,7 +151,7 @@ public class MySqlStorageProvider extends StorageProvider {
                                 String itemKey = splitEntry[0];
                                 int amount = 1;
                                 if (splitEntry.length >= 2) {
-                                    amount = NumberUtils.toInt(splitEntry[1], 1);
+                                    amount = NumberUtil.toInt(splitEntry[1], 1);
                                 }
                                 unclaimedItems.add(new KeyIntPair(itemKey, amount));
                             }
@@ -176,6 +178,111 @@ public class MySqlStorageProvider extends StorageProvider {
             PlayerData playerData = createNewPlayer(player);
             playerData.setShouldSave(false);
             sendErrorMessageToPlayer(player, e);
+        }
+    }
+
+    @Override
+    @Nullable
+    public PlayerDataState loadState(UUID uuid) {
+        try {
+            String query = "SELECT * FROM SkillData WHERE ID=?;";
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, uuid.toString());
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        Map<Skill, Integer> skillLevels = new HashMap<>();
+                        Map<Skill, Double> skillXp = new HashMap<>();
+                        // Load skill data
+                        for (Skill skill : Skills.values()) {
+                            int level = result.getInt(skill.name().toUpperCase(Locale.ROOT) + "_LEVEL");
+                            double xp = result.getDouble(skill.name().toUpperCase(Locale.ROOT) + "_XP");
+                            skillLevels.put(skill, level);
+                            skillXp.put(skill, xp);
+                        }
+                        // Load stat modifiers
+                        Map<String, StatModifier> statModifiers = new HashMap<>();
+                        String statModifiersString = result.getString("STAT_MODIFIERS");
+                        if (statModifiersString != null) {
+                            JsonArray jsonModifiers = new Gson().fromJson(statModifiersString, JsonArray.class);
+                            for (JsonElement modifierElement : jsonModifiers.getAsJsonArray()) {
+                                JsonObject modifierObject = modifierElement.getAsJsonObject();
+                                String name = modifierObject.get("name").getAsString();
+                                String statName = modifierObject.get("stat").getAsString();
+                                double value = modifierObject.get("value").getAsDouble();
+                                if (name != null && statName != null) {
+                                    Stat stat = plugin.getStatRegistry().getStat(statName);
+                                    StatModifier modifier = new StatModifier(name, stat, value);
+                                    statModifiers.put(name, modifier);
+                                }
+                            }
+                        }
+                        double mana = result.getDouble("mana");
+                        return new PlayerDataState(uuid, skillLevels, skillXp, statModifiers, mana);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("There was an error loading player data state for player with UUID " + uuid + ", see below for details.");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean applyState(PlayerDataState state) {
+        try {
+            StringBuilder sqlBuilder = new StringBuilder("INSERT INTO SkillData (ID, ");
+            for (Skill skill : Skills.getOrderedValues()) {
+                sqlBuilder.append(skill.toString()).append("_LEVEL, ");
+                sqlBuilder.append(skill).append("_XP, ");
+            }
+            sqlBuilder.append("STAT_MODIFIERS, MANA) VALUES(?, ");
+            for (int i = 0; i < Skills.getOrderedValues().size(); i++) {
+                sqlBuilder.append("?, ?, ");
+            }
+            sqlBuilder.append("?, ?) ");
+            sqlBuilder.append("ON DUPLICATE KEY UPDATE ");
+            for (Skill skill : Skills.getOrderedValues()) {
+                sqlBuilder.append(skill.toString()).append("_LEVEL=?, ");
+                sqlBuilder.append(skill).append("_XP=?, ");
+            }
+            sqlBuilder.append("STAT_MODIFIERS=?, ");
+            sqlBuilder.append("MANA=?");
+            // Enter values into prepared statement
+            try (PreparedStatement statement = connection.prepareStatement(sqlBuilder.toString())) {
+                statement.setString(1, state.getUuid().toString());
+                int index = 2;
+                for (int i = 0; i < 2; i++) {
+                    for (Skill skill : Skills.getOrderedValues()) {
+                        statement.setInt(index++, state.getSkillLevels().get(skill));
+                        statement.setDouble(index++, state.getSkillXp().get(skill));
+                    }
+                    // Build stat modifiers json
+                    StringBuilder modifiersJson = new StringBuilder();
+                    if (state.getStatModifiers().size() > 0) {
+                        modifiersJson.append("[");
+                        for (StatModifier statModifier : state.getStatModifiers().values()) {
+                            modifiersJson.append("{\"name\":\"").append(statModifier.getName())
+                                    .append("\",\"stat\":\"").append(statModifier.getStat().toString().toLowerCase(Locale.ROOT))
+                                    .append("\",\"value\":").append(statModifier.getValue()).append("},");
+                        }
+                        modifiersJson.deleteCharAt(modifiersJson.length() - 1);
+                        modifiersJson.append("]");
+                    }
+                    // Add stat modifiers to prepared statement
+                    if (!modifiersJson.toString().equals("")) {
+                        statement.setString(index++, modifiersJson.toString());
+                    } else {
+                        statement.setNull(index++, Types.VARCHAR);
+                    }
+                    statement.setDouble(index++, state.getMana()); // Set mana
+                }
+                statement.executeUpdate();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -207,6 +314,7 @@ public class MySqlStorageProvider extends StorageProvider {
                         "ABILITY_DATA varchar(4096), " +
                         "UNCLAIMED_ITEMS varchar(4096), " +
                         "CONSTRAINT PKEY PRIMARY KEY (ID))");
+                plugin.getLogger().info("Created new SkillData table");
             }
         }
     }
@@ -216,6 +324,10 @@ public class MySqlStorageProvider extends StorageProvider {
         PlayerData playerData = playerManager.getPlayerData(player);
         if (playerData == null) return;
         if (playerData.shouldNotSave()) return;
+        // Don't save if blank profile
+        if (!OptionL.getBoolean(Option.SAVE_BLANK_PROFILES) && playerData.isBlankProfile()) {
+            return;
+        }
         try {
             StringBuilder sqlBuilder = new StringBuilder("INSERT INTO SkillData (ID, ");
             for (Skill skill : Skills.getOrderedValues()) {

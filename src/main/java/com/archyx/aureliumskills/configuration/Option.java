@@ -23,6 +23,7 @@ public enum Option {
     ACTION_BAR_UPDATE_PERIOD("action-bar.update-period", OptionType.INT),
     ACTION_BAR_ROUND_XP("action-bar.round-xp", OptionType.BOOLEAN),
     ACTION_BAR_PLACEHOLDER_API("action-bar.placeholder-api", OptionType.BOOLEAN),
+    ACTION_BAR_USE_SUFFIX("action-bar.use-suffix", OptionType.BOOLEAN),
     // Boss bar options
     BOSS_BAR_ENABLED("boss-bar.enabled", OptionType.BOOLEAN),
     BOSS_BAR_MODE("boss-bar.mode", OptionType.STRING),
@@ -30,6 +31,8 @@ public enum Option {
     BOSS_BAR_UPDATE_EVERY("boss-bar.update-every", OptionType.INT),
     BOSS_BAR_ROUND_XP("boss-bar.round-xp", OptionType.BOOLEAN),
     BOSS_BAR_DISPLAY_MAXED("boss-bar.display-maxed", OptionType.BOOLEAN),
+    BOSS_BAR_PLACEHOLDER_API("boss-bar.placeholder-api", OptionType.BOOLEAN),
+    BOSS_BAR_USE_SUFFIX("boss-bar.use-suffix", OptionType.BOOLEAN),
     BOSS_BAR_FORMAT("boss-bar.format", OptionType.LIST),
     BASE_MANA("base-mana", OptionType.DOUBLE),
     ENABLE_ROMAN_NUMERALS("enable-roman-numerals", OptionType.BOOLEAN),
@@ -99,6 +102,7 @@ public enum Option {
     CHECK_FOR_UPDATES("check-for-updates", OptionType.BOOLEAN),
     AUTOMATIC_BACKUPS_ENABLED("automatic-backups.enabled", OptionType.BOOLEAN),
     AUTOMATIC_BACKUPS_MINIMUM_INTERVAL_HOURS("automatic-backups.minimum-interval-hours", OptionType.DOUBLE),
+    SAVE_BLANK_PROFILES("save-blank-profiles", OptionType.BOOLEAN),
     // Skill options (not including source types)
     FARMING_ENABLED("farming.enabled", OptionType.BOOLEAN),
     FARMING_MAX_LEVEL("farming.max-level", OptionType.INT),
@@ -158,6 +162,7 @@ public enum Option {
     ENCHANTING_CHECK_MULTIPLIER_PERMISSIONS("enchanting.check-multiplier-permissions", OptionType.BOOLEAN),
     SORCERY_ENABLED("sorcery.enabled", OptionType.BOOLEAN),
     SORCERY_MAX_LEVEL("sorcery.max-level", OptionType.INT),
+    SORCERY_CHECK_CANCELLED("sorcery.check-cancelled", OptionType.BOOLEAN),
     SORCERY_CHECK_MULTIPLIER_PERMISSIONS("sorcery.check-multiplier-permissions", OptionType.BOOLEAN),
     HEALING_ENABLED("healing.enabled", OptionType.BOOLEAN),
     HEALING_MAX_LEVEL("healing.max-level", OptionType.INT),
@@ -168,6 +173,7 @@ public enum Option {
     FORGING_MAX_LEVEL("forging.max-level", OptionType.INT),
     FORGING_CHECK_CANCELLED("forging.check-cancelled", OptionType.BOOLEAN),
     FORGING_CHECK_MULTIPLIER_PERMISSIONS("forging.check-multiplier-permissions", OptionType.BOOLEAN),
+    FORGING_BLOCKED_GRINDSTONE_ENCHANTS("forging.blocked-grindstone-enchants", OptionType.LIST),
     // Stat options
     HEALTH_MODIFIER("health.modifier", OptionType.DOUBLE),
     HEALTH_HEALTH_SCALING("health.health-scaling", OptionType.BOOLEAN),

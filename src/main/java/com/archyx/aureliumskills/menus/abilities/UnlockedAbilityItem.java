@@ -10,7 +10,7 @@ import com.archyx.aureliumskills.skills.Skill;
 import com.archyx.aureliumskills.util.math.NumberUtil;
 import com.archyx.aureliumskills.util.math.RomanNumber;
 import com.archyx.aureliumskills.util.text.TextUtil;
-import com.archyx.slate.item.provider.PlaceholderType;
+import com.archyx.slate.item.provider.PlaceholderData;
 import com.archyx.slate.menu.ActiveMenu;
 import org.bukkit.entity.Player;
 
@@ -26,7 +26,7 @@ public class UnlockedAbilityItem extends AbstractAbilityItem {
     }
 
     @Override
-    public String onPlaceholderReplace(String placeholder, Player player, ActiveMenu menu, PlaceholderType type, Ability ability) {
+    public String onPlaceholderReplace(String placeholder, Player player, ActiveMenu menu, PlaceholderData data, Ability ability) {
         PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);
         if (playerData == null) return placeholder;
         Locale locale = plugin.getLang().getLocale(player);
@@ -78,23 +78,30 @@ public class UnlockedAbilityItem extends AbstractAbilityItem {
     private String getUpgradeValue(Ability ability, PlayerData playerData) {
         String currentValue = getCurrentValue(ability, playerData);
         String nextValue = NumberUtil.format1(plugin.getAbilityManager().getValue(ability, playerData.getAbilityLevel(ability) + 1));
-        return "&7" + currentValue + "&8→" + nextValue + "&7";
+        Locale locale = playerData.getLocale();
+        return TextUtil.replace(Lang.getMessage(MenuMessage.DESC_UPGRADE_VALUE, locale),
+                "{current}", currentValue,
+                "{next}", nextValue);
     }
 
     private String getUpgradeValue2(Ability ability, PlayerData playerData) {
         String currentValue = getCurrentValue2(ability, playerData);
         String nextValue = NumberUtil.format1(plugin.getAbilityManager().getValue2(ability, playerData.getAbilityLevel(ability) + 1));
-        return "&7" + currentValue + "&8→" + nextValue + "&7";
+        Locale locale = playerData.getLocale();
+        return TextUtil.replace(Lang.getMessage(MenuMessage.DESC_UPGRADE_VALUE, locale),
+                "{current}", currentValue,
+                "{next}", nextValue);
     }
 
     private boolean isNotMaxed(PlayerData playerData, Ability ability) {
         int maxLevel = plugin.getAbilityManager().getMaxLevel(ability);
         int unlock = plugin.getAbilityManager().getUnlock(ability);
         int levelUp = plugin.getAbilityManager().getLevelUp(ability);
-        if (maxLevel == 0) {
-            maxLevel = OptionL.getMaxLevel(ability.getSkill());
+        int maxAllowedBySkill = (OptionL.getMaxLevel(ability.getSkill()) - unlock) / levelUp + 1;
+        if (maxLevel == 0 || maxLevel > maxAllowedBySkill) {
+            maxLevel = maxAllowedBySkill;
         }
-        return (unlock + levelUp * (playerData.getAbilityLevel(ability) + 1)) <= maxLevel;
+        return playerData.getAbilityLevel(ability) < maxLevel;
     }
 
     @Override

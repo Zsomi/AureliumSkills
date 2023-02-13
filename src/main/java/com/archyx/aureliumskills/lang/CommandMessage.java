@@ -110,6 +110,10 @@ public enum CommandMessage implements MessageKey {
     MULTIPLIER_PLAYERS_ONLY(Command.MULTIPLIER, "players_only"),
     MULTIPLIER_GLOBAL,
     MULTIPLIER_SKILL_ENTRY(Command.MULTIPLIER, "skill_entry"),
+    PROFILE_SKILLS,
+    PROFILE_SKILL_ENTRY(Command.PROFILE, "skill_entry"),
+    PROFILE_STATS,
+    PROFILE_STAT_ENTRY(Command.PROFILE, "stat_entry"),
     RANK_HEADER,
     RANK_POWER,
     RANK_ENTRY,
@@ -136,6 +140,8 @@ public enum CommandMessage implements MessageKey {
     TOP_AVERAGE_HEADER(Command.TOP, "average_header"),
     TOP_AVERAGE_HEADER_PAGE(Command.TOP, "average_header_page"),
     TOP_AVERAGE_ENTRY(Command.TOP, "average_entry"),
+    TRANSFER_SUCCESS(Command.TRANSFER, "success"),
+    TRANSFER_ERROR(Command.TRANSFER, "error"),
     UPDATELEADERBOARDS_ALREADY_UPDATING(Command.UPDATELEADERBOARDS, "already_updating"),
     UPDATELEADERBOARDS_UPDATED,
     VERSION,
@@ -158,6 +164,7 @@ public enum CommandMessage implements MessageKey {
         this.path = "commands." + path;
     }
 
+    @Override
     public String getPath() {
         return path;
     }
