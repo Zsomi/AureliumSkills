@@ -216,6 +216,25 @@ public class PlaceholderSupport extends PlaceholderExpansion {
                 if (skill != null) {
                     PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);
                     if (playerData != null) {
+                        if (id.equals("xp_progress_")) {
+                            int progress = (int) (playerData.getSkillXp(skill) / (double) (plugin.getLeveler().getXpRequirements().getXpRequired(skill, playerData.getSkillLevel(skill) + 1)) * 15);
+                            StringBuilder progressBar = new StringBuilder("");
+                            for (int i = 0; i < 50; i++) {
+                                if (i < progress) {
+                                    progressBar.append("§b|");
+                                } else {
+                                    progressBar.append("§7|");
+                                }
+                            }
+                            progressBar.append("");
+                            return progressBar.toString();
+                        }
+                    }
+                }
+
+                if (skill != null) {
+                    PlayerData playerData = plugin.getPlayerManager().getPlayerData(player);
+                    if (playerData != null) {
                         switch (id) {
                             case "xp_required_formatted_":
                                 return BigNumber.withSuffix(plugin.getLeveler().getXpRequirements().getXpRequired(skill, playerData.getSkillLevel(skill) + 1));
